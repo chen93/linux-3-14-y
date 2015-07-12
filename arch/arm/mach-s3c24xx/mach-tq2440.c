@@ -50,6 +50,11 @@
 #include <plat/samsung-time.h>
 #include <plat/pm.h>
 
+#ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
+#include <linux/i2c-gpio.h>
+#include <mach/gpio-samsung.h>
+#endif
+
 #include "common.h"
 #include "common-smdk.h"
 
@@ -271,11 +276,34 @@ struct platform_device s3c_device_dm9000 = {
 	}
 };
 
+#ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
+static struct i2c_gpio_platform_data s3c_gpio_i2c_platdata = {
+	.sda_pin = S3C2410_GPE(15),
+	.scl_pin = S3C2410_GPE(14),
+	//.sda_is_open_drain = 1,
+	//.scl_is_open_drain = 1,
+	//.scl_is_output_only = 1,
+	//.udelay = 100,  // µÍµçÆ½ºÍ¸ßµçÆ½µÄ³ÖÐøÊ±¼ä¶¼ÊÇ100us£¬ÄÇÃ´ÆµÂÊ¾ÍÊÇ5KHz
+};
+
+struct platform_device s3c_device_gpio_i2c = {
+	.name		= "i2c-gpio",
+	.id			= 0,
+	.dev			= {
+		.platform_data = &s3c_gpio_i2c_platdata,
+	}
+};
+#endif
+
 static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_ohci,
 	&s3c_device_lcd,
 	&s3c_device_wdt,
+#ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
+	&s3c_device_gpio_i2c,
+#else
 	&s3c_device_i2c0,
+#endif
 	&s3c_device_iis,
 	&s3c_device_dm9000,
 	&s3c_device_rtc,
