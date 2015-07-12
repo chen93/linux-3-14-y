@@ -179,7 +179,7 @@ static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
 			   S3C2410_GPDCON_MASK(12) | S3C2410_GPDCON_MASK(13)|
 			   S3C2410_GPDCON_MASK(14) | S3C2410_GPDCON_MASK(15)),
 
-//	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
+	.lpcsel		= 0,
 };
 
 /* NAND parititon */
