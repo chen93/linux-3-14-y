@@ -38,6 +38,8 @@
 
 #include <mach/fb.h>
 #include <linux/platform_data/i2c-s3c2410.h>
+#include <linux/platform_data/at24.h>
+#include <linux/i2c.h>
 
 #include <plat/clock.h>
 #include <plat/devs.h>
@@ -149,6 +151,20 @@ static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
 	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
 
+/* AT24C02 */
+static struct at24_platform_data tq2440_platform_data = {
+	.byte_len = SZ_1K*2/8,
+	.page_size = 8,
+	.flags = AT24_FLAG_TAKE8ADDR,
+};
+
+static struct i2c_board_info tq2440_at24c02[] = {
+	{
+		I2C_BOARD_INFO("24c02", 0x50),
+		.platform_data = &tq2440_platform_data,
+	},
+};
+
 /* DM9000 */
 static struct resource s3c_dm9k_resource[] = {
 	[0] = {
@@ -190,6 +206,7 @@ static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_i2c0,
 	&s3c_device_iis,
 	&s3c_device_dm9000,
+	&s3c_device_rtc,
 };
 
 static void __init tq2440_map_io(void)
@@ -206,6 +223,9 @@ static void __init tq2440_machine_init(void)
 	s3c_i2c0_set_platdata(NULL);
 
 	platform_add_devices(tq2440_devices, ARRAY_SIZE(tq2440_devices));
+
+	i2c_register_board_info(0, tq2440_at24c02, 1);
+
 	smdk_machine_init();
 }
 
