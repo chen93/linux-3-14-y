@@ -41,10 +41,14 @@
 #include <linux/platform_data/at24.h>
 #include <linux/i2c.h>
 
+#include <linux/mtd/partitions.h>
+#include <linux/platform_data/mtd-nand-s3c2410.h>
+
 #include <plat/clock.h>
 #include <plat/devs.h>
 #include <plat/cpu.h>
 #include <plat/samsung-time.h>
+#include <plat/pm.h>
 
 #include "common.h"
 #include "common-smdk.h"
@@ -131,6 +135,47 @@ static struct s3c2410fb_display tq2440_lcd_cfg __initdata = {
 	.vsync_len	= 4,
 };
 
+/* NAND parititon */
+
+static struct mtd_partition tq2440_nand_part[] = {
+	[0] = {
+		.name	= "Boot",
+		.offset = 0,
+		.size	= SZ_2M,
+	},
+	[1] = {
+		.name	= "Kernel",
+		.offset	= SZ_2M,
+		.size	= SZ_1M * 3,
+	},
+	[2] = {
+		.name	= "Rootfs",
+		.offset = SZ_1M * 5,
+		.size	= MTDPART_SIZ_FULL,
+	}
+};
+
+static struct s3c2410_nand_set tq2440_nand_sets[] = {
+	[0] = {
+		.name		= "NAND",
+		.nr_chips	= 1,
+		.nr_partitions	= ARRAY_SIZE(tq2440_nand_part),
+		.partitions	= tq2440_nand_part,
+	},
+};
+
+/* choose a set of timings which should suit most 512Mbit
+ * chips and beyond.
+*/
+
+static struct s3c2410_platform_nand tq2440_nand_info = {
+	.tacls		= 10,
+	.twrph0		= 25,
+	.twrph1		= 10,
+	.nr_sets	= ARRAY_SIZE(tq2440_nand_sets),
+	.sets		= tq2440_nand_sets,
+};
+
 static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
 	.displays	= &tq2440_lcd_cfg,
 	.num_displays	= 1,
@@ -207,6 +252,7 @@ static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_iis,
 	&s3c_device_dm9000,
 	&s3c_device_rtc,
+	&s3c_device_nand,
 };
 
 static void __init tq2440_map_io(void)
@@ -220,13 +266,16 @@ static void __init tq2440_map_io(void)
 static void __init tq2440_machine_init(void)
 {
 	s3c24xx_fb_set_platdata(&tq2440_fb_info);
+
 	s3c_i2c0_set_platdata(NULL);
+
+	s3c_nand_set_platdata(&tq2440_nand_info);
 
 	platform_add_devices(tq2440_devices, ARRAY_SIZE(tq2440_devices));
 
 	i2c_register_board_info(0, tq2440_at24c02, 1);
 
-	smdk_machine_init();
+	s3c_pm_init();
 }
 
 MACHINE_START(TQ2440, "TQ2440")
