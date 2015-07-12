@@ -120,19 +120,66 @@ static struct s3c2410fb_display tq2440_lcd_cfg __initdata = {
 
 	.type		= S3C2410_LCDCON1_TFT,
 
-	.width		= 240,
-	.height		= 320,
+	.width		= 480,
+	.height		= 272,
 
-	.pixclock	= 166667, /* HCLK 60 MHz, divisor 10 */
-	.xres		= 240,
-	.yres		= 320,
+	.pixclock	= 100000,
+	.xres		= 480,
+	.yres		= 272,
 	.bpp		= 16,
-	.left_margin	= 20,
-	.right_margin	= 8,
-	.hsync_len	= 4,
-	.upper_margin	= 8,
-	.lower_margin	= 7,
-	.vsync_len	= 4,
+	.left_margin	= 2,  /* For HBPD  */
+	.right_margin	= 2,  /* For HFPD  */
+	.hsync_len	    = 41, /* For HSPW  */
+	.upper_margin	= 2,  /* For VBPD  */
+	.lower_margin	= 2,  /* For VFPD  */
+	.vsync_len	    = 10, /* For VSPW  */
+};
+
+#define S3C2410_GPCCON_MASK(x)	(3 << ((x) * 2))
+#define S3C2410_GPDCON_MASK(x)	(3 << ((x) * 2))
+
+static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
+	.displays	= &tq2440_lcd_cfg,
+	.num_displays	= 1,
+	.default_display = 0,
+
+	/* Enable VD[2..7], VD[10..15], VD[18..23] and VCLK, syncs, VDEN
+	 * and disable the pull down resistors on pins we are using for LCD
+	 * data. */
+
+	.gpcup		= (0xf << 1) | (0x3f << 10),
+
+	.gpccon		= (S3C2410_GPC1_VCLK   | S3C2410_GPC2_VLINE |
+			   S3C2410_GPC3_VFRAME | S3C2410_GPC4_VM |
+			   S3C2410_GPC8_VD0   | S3C2410_GPC9_VD1 |
+			   S3C2410_GPC10_VD2   | S3C2410_GPC11_VD3 |
+			   S3C2410_GPC12_VD4   | S3C2410_GPC13_VD5 |
+			   S3C2410_GPC14_VD6   | S3C2410_GPC15_VD7),
+
+	.gpccon_mask	= (S3C2410_GPCCON_MASK(1)  | S3C2410_GPCCON_MASK(2)  |
+			   S3C2410_GPCCON_MASK(3)  | S3C2410_GPCCON_MASK(4)  |
+			   S3C2410_GPCCON_MASK(8) | S3C2410_GPCCON_MASK(9) |
+			   S3C2410_GPCCON_MASK(10) | S3C2410_GPCCON_MASK(11) |
+			   S3C2410_GPCCON_MASK(12) | S3C2410_GPCCON_MASK(13) |
+			   S3C2410_GPCCON_MASK(14) | S3C2410_GPCCON_MASK(15)),
+
+	.gpdup		= (0x3f << 2) | (0x3f << 10),
+
+	.gpdcon		= (S3C2410_GPD2_VD10  | S3C2410_GPD3_VD11 |
+			   S3C2410_GPD4_VD12  | S3C2410_GPD5_VD13 |
+			   S3C2410_GPD6_VD14  | S3C2410_GPD7_VD15 |
+			   S3C2410_GPD10_VD18 | S3C2410_GPD11_VD19 |
+			   S3C2410_GPD12_VD20 | S3C2410_GPD13_VD21 |
+			   S3C2410_GPD14_VD22 | S3C2410_GPD15_VD23),
+
+	.gpdcon_mask	= (S3C2410_GPDCON_MASK(2)  | S3C2410_GPDCON_MASK(3) |
+			   S3C2410_GPDCON_MASK(4)  | S3C2410_GPDCON_MASK(5) |
+			   S3C2410_GPDCON_MASK(6)  | S3C2410_GPDCON_MASK(7) |
+			   S3C2410_GPDCON_MASK(10) | S3C2410_GPDCON_MASK(11)|
+			   S3C2410_GPDCON_MASK(12) | S3C2410_GPDCON_MASK(13)|
+			   S3C2410_GPDCON_MASK(14) | S3C2410_GPDCON_MASK(15)),
+
+//	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
 
 /* NAND parititon */
@@ -174,26 +221,6 @@ static struct s3c2410_platform_nand tq2440_nand_info = {
 	.twrph1		= 10,
 	.nr_sets	= ARRAY_SIZE(tq2440_nand_sets),
 	.sets		= tq2440_nand_sets,
-};
-
-static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
-	.displays	= &tq2440_lcd_cfg,
-	.num_displays	= 1,
-	.default_display = 0,
-
-#if 0
-	/* currently setup by downloader */
-	.gpccon		= 0xaa940659,
-	.gpccon_mask	= 0xffffffff,
-	.gpcup		= 0x0000ffff,
-	.gpcup_mask	= 0xffffffff,
-	.gpdcon		= 0xaa84aaa0,
-	.gpdcon_mask	= 0xffffffff,
-	.gpdup		= 0x0000faff,
-	.gpdup_mask	= 0xffffffff,
-#endif
-
-	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
 
 /* AT24C02 */
