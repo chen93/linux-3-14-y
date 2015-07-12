@@ -1,11 +1,11 @@
-/* linux/arch/arm/mach-s3c2440/mach-smdk2440.c
+/* linux/arch/arm/mach-s3c2440/mach-tq2440.c
  *
  * Copyright (c) 2004-2005 Simtec Electronics
  *	Ben Dooks <ben@simtec.co.uk>
  *
  * http://www.fluff.org/ben/smdk2440/
  *
- * Thanks to Dimity Andric and TomTom for the loan of an SMDK2440.
+ * Thanks to Dimity Andric and TomTom for the loan of an tq2440.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -22,6 +22,7 @@
 #include <linux/serial_core.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
+#include <linux/dm9000.h>
 
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -46,7 +47,7 @@
 #include "common.h"
 #include "common-smdk.h"
 
-static struct map_desc smdk2440_iodesc[] __initdata = {
+static struct map_desc tq2440_iodesc[] __initdata = {
 	/* ISA IO Space map (memory space selected by A24) */
 
 	{
@@ -76,7 +77,7 @@ static struct map_desc smdk2440_iodesc[] __initdata = {
 #define ULCON S3C2410_LCON_CS8 | S3C2410_LCON_PNONE | S3C2410_LCON_STOPB
 #define UFCON S3C2410_UFCON_RXTRIG8 | S3C2410_UFCON_FIFOMODE
 
-static struct s3c2410_uartcfg smdk2440_uartcfgs[] __initdata = {
+static struct s3c2410_uartcfg tq2440_uartcfgs[] __initdata = {
 	[0] = {
 		.hwport	     = 0,
 		.flags	     = 0,
@@ -103,7 +104,7 @@ static struct s3c2410_uartcfg smdk2440_uartcfgs[] __initdata = {
 
 /* LCD driver info */
 
-static struct s3c2410fb_display smdk2440_lcd_cfg __initdata = {
+static struct s3c2410fb_display tq2440_lcd_cfg __initdata = {
 
 	.lcdcon5	= S3C2410_LCDCON5_FRM565 |
 			  S3C2410_LCDCON5_INVVLINE |
@@ -128,8 +129,8 @@ static struct s3c2410fb_display smdk2440_lcd_cfg __initdata = {
 	.vsync_len	= 4,
 };
 
-static struct s3c2410fb_mach_info smdk2440_fb_info __initdata = {
-	.displays	= &smdk2440_lcd_cfg,
+static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
+	.displays	= &tq2440_lcd_cfg,
 	.num_displays	= 1,
 	.default_display = 0,
 
@@ -148,28 +149,63 @@ static struct s3c2410fb_mach_info smdk2440_fb_info __initdata = {
 	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
 };
 
-static struct platform_device *smdk2440_devices[] __initdata = {
+/* DM9000 */
+static struct resource s3c_dm9k_resource[] = {
+	[0] = {
+		.start	= S3C2410_CS4,
+		.end	= S3C2410_CS4 + 3,
+		.flags	= IORESOURCE_MEM,
+	},
+	[1] = {
+		.start	= S3C2410_CS4 + 4,
+		.end	= S3C2410_CS4 + 4 + 3,
+		.flags	= IORESOURCE_MEM,
+	},
+	[2] = {
+		.start	= IRQ_EINT7,
+		.end	= IRQ_EINT7,
+		.flags	= IORESOURCE_IRQ | IRQF_TRIGGER_RISING,
+	}
+
+};
+
+static struct dm9000_plat_data s3c_dm9k_platdata = {
+	.flags	= DM9000_PLATF_16BITONLY,
+};
+
+struct platform_device s3c_device_dm9000 = {
+	.name		= "dm9000",
+	.id			= 0,
+	.num_resources	= ARRAY_SIZE(s3c_dm9k_resource),
+	.resource		= s3c_dm9k_resource,
+	.dev			= {
+		.platform_data = &s3c_dm9k_platdata,
+	}
+};
+
+static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_ohci,
 	&s3c_device_lcd,
 	&s3c_device_wdt,
 	&s3c_device_i2c0,
 	&s3c_device_iis,
+	&s3c_device_dm9000,
 };
 
-static void __init smdk2440_map_io(void)
+static void __init tq2440_map_io(void)
 {
-	s3c24xx_init_io(smdk2440_iodesc, ARRAY_SIZE(smdk2440_iodesc));
+	s3c24xx_init_io(tq2440_iodesc, ARRAY_SIZE(tq2440_iodesc));
 	s3c24xx_init_clocks(12000000);
-	s3c24xx_init_uarts(smdk2440_uartcfgs, ARRAY_SIZE(smdk2440_uartcfgs));
+	s3c24xx_init_uarts(tq2440_uartcfgs, ARRAY_SIZE(tq2440_uartcfgs));
 	samsung_set_timer_source(SAMSUNG_PWM3, SAMSUNG_PWM4);
 }
 
-static void __init smdk2440_machine_init(void)
+static void __init tq2440_machine_init(void)
 {
-	s3c24xx_fb_set_platdata(&smdk2440_fb_info);
+	s3c24xx_fb_set_platdata(&tq2440_fb_info);
 	s3c_i2c0_set_platdata(NULL);
 
-	platform_add_devices(smdk2440_devices, ARRAY_SIZE(smdk2440_devices));
+	platform_add_devices(tq2440_devices, ARRAY_SIZE(tq2440_devices));
 	smdk_machine_init();
 }
 
@@ -178,8 +214,8 @@ MACHINE_START(TQ2440, "TQ2440")
 	.atag_offset	= 0x100,
 
 	.init_irq	= s3c2440_init_irq,
-	.map_io		= smdk2440_map_io,
-	.init_machine	= smdk2440_machine_init,
+	.map_io		= tq2440_map_io,
+	.init_machine	= tq2440_machine_init,
 	.init_time	= samsung_timer_init,
 	.restart	= s3c244x_restart,
 MACHINE_END
