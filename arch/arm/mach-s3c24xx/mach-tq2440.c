@@ -209,7 +209,7 @@ static struct mtd_partition tq2440_nand_part[] = {
 
 static struct s3c2410_nand_set tq2440_nand_sets[] = {
 	[0] = {
-		.name		= "NAND",
+		.name		= "tq2440-0",
 		.nr_chips	= 1,
 		.nr_partitions	= ARRAY_SIZE(tq2440_nand_part),
 		.partitions	= tq2440_nand_part,
