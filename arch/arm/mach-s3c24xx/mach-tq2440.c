@@ -188,7 +188,6 @@ static struct s3c2410fb_mach_info tq2440_fb_info __initdata = {
 };
 
 /* NAND parititon */
-
 static struct mtd_partition tq2440_nand_part[] = {
 	[0] = {
 		.name	= "Boot",
@@ -229,16 +228,17 @@ static struct s3c2410_platform_nand tq2440_nand_info = {
 };
 
 /* AT24C02 */
-static struct at24_platform_data tq2440_platform_data = {
+static struct at24_platform_data tq2440_at24c02_platform_data = {
 	.byte_len = SZ_1K*2/8,
 	.page_size = 8,
 	.flags = AT24_FLAG_TAKE8ADDR,
 };
 
-static struct i2c_board_info tq2440_at24c02[] = {
+static struct i2c_board_info tq2440_i2c_board_info[] = {
+	/* AT24C02  */
 	{
 		I2C_BOARD_INFO("24c02", 0x50),
-		.platform_data = &tq2440_platform_data,
+		.platform_data = &tq2440_at24c02_platform_data,
 	},
 };
 
@@ -288,7 +288,11 @@ static struct i2c_gpio_platform_data s3c_gpio_i2c_platdata = {
 
 struct platform_device s3c_device_gpio_i2c = {
 	.name		= "i2c-gpio",
+#ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
+	.id			= 2,
+#else
 	.id			= 0,
+#endif
 	.dev			= {
 		.platform_data = &s3c_gpio_i2c_platdata,
 	}
@@ -328,7 +332,11 @@ static void __init tq2440_machine_init(void)
 
 	platform_add_devices(tq2440_devices, ARRAY_SIZE(tq2440_devices));
 
-	i2c_register_board_info(0, tq2440_at24c02, 1);
+#ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
+	i2c_register_board_info(2, tq2440_i2c_board_info, ARRAY_SIZE(tq2440_i2c_board_info));
+#else
+	i2c_register_board_info(0, tq2440_i2c_board_info, ARRAY_SIZE(tq2440_i2c_board_info));
+#endif
 
 	s3c_pm_init();
 }
