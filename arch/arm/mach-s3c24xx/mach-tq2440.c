@@ -52,7 +52,13 @@
 
 #ifdef CONFIG_TQ2440_EEPROM_USE_GPIO_I2C
 #include <linux/i2c-gpio.h>
+#endif
+
 #include <mach/gpio-samsung.h>
+
+#include <linux/spi/spi.h>
+#ifdef CONFIG_TQ2440_USE_SPI_GPIO
+#include <linux/spi/spi_gpio.h>
 #endif
 
 #include "common.h"
@@ -299,6 +305,38 @@ struct platform_device s3c_device_gpio_i2c = {
 };
 #endif
 
+/* SPI OLED */
+static struct spi_board_info tq2440_spi_board_info[] __initdata = {
+	{
+		.modalias	= "oled",
+		.max_speed_hz	= 100000,
+		.bus_num	= 0,
+		.mode		= SPI_MODE_0,
+		.chip_select	= S3C2410_GPG(1),
+		.platform_data	= (const void *)S3C2410_GPF(3),
+#ifdef CONFIG_TQ2440_USE_SPI_GPIO
+		.controller_data= (void *)S3C2410_GPG(1),
+#endif
+	},
+};
+
+#ifdef CONFIG_TQ2440_USE_SPI_GPIO
+static struct spi_gpio_platform_data s3c_spi0_gpio_info = {
+	.num_chipselect = S3C_GPIO_END,
+	.miso		= S3C2410_GPE(11),
+	.mosi		= S3C2410_GPE(12),
+	.sck		= S3C2410_GPE(13),
+};
+
+static struct platform_device s3c_device_spi0_gpio = {
+	.name		= "spi_gpio",
+	.id		= 0,
+	.dev		= {
+		.platform_data		= (void *)&s3c_spi0_gpio_info,
+	}
+};
+#endif
+
 static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_ohci,
 	&s3c_device_lcd,
@@ -312,6 +350,11 @@ static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_dm9000,
 	&s3c_device_rtc,
 	&s3c_device_nand,
+#ifdef CONFIG_TQ2440_USE_SPI_GPIO
+	&s3c_device_spi0_gpio
+#else
+	&s3c_device_spi0,
+#endif
 };
 
 static void __init tq2440_map_io(void)
@@ -337,6 +380,8 @@ static void __init tq2440_machine_init(void)
 #else
 	i2c_register_board_info(0, tq2440_i2c_board_info, ARRAY_SIZE(tq2440_i2c_board_info));
 #endif
+
+	spi_register_board_info(tq2440_spi_board_info, ARRAY_SIZE(tq2440_spi_board_info));
 
 	s3c_pm_init();
 }

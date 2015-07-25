@@ -560,6 +560,12 @@ config TQ2440_EEPROM_USE_GPIO_I2C
 	help
 	  Say Y here to use gpio i2c to operate EEPROM.
 
+config TQ2440_USE_SPI_GPIO
+	bool "TQ2440 use spi gpio to communicate with peripherals"
+	depends on MACH_TQ2440
+	help
+	  Say Y here to use spi gpio to communicate with peripherals.
+
 config MACH_NEXCODER_2440
 	bool "NexVision NEXCODER 2440 Light Board"
 	select S3C2440_XTAL_12000000

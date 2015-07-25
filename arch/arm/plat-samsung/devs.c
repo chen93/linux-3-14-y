@@ -68,6 +68,10 @@
 #include <plat/regs-spi.h>
 #include <linux/platform_data/spi-s3c64xx.h>
 
+#include <linux/spi/s3c24xx.h>
+#include <linux/gpio.h>
+#include <mach/gpio-samsung.h>
+
 static u64 samsung_device_dma_mask = DMA_BIT_MASK(32);
 
 /* AC97 */
@@ -1177,6 +1181,19 @@ static struct resource s3c_spi0_resource[] = {
 	[1] = DEFINE_RES_IRQ(IRQ_SPI0),
 };
 
+static void s3c24xx_spi_set_cs(struct s3c2410_spi_info *spi, int cs, int pol)
+{
+	gpio_set_value(cs, pol);
+}
+
+static struct s3c2410_spi_info s3c_spi_info[] = {
+	{
+		.num_cs  = S3C_GPIO_END,
+		.bus_num = 0,
+		.set_cs = s3c24xx_spi_set_cs,
+	}
+};
+
 struct platform_device s3c_device_spi0 = {
 	.name		= "s3c2410-spi",
 	.id		= 0,
@@ -1185,6 +1202,7 @@ struct platform_device s3c_device_spi0 = {
 	.dev		= {
 		.dma_mask		= &samsung_device_dma_mask,
 		.coherent_dma_mask	= DMA_BIT_MASK(32),
+		.platform_data		= (void *)s3c_spi_info,
 	}
 };
 

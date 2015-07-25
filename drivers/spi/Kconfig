@@ -388,6 +388,8 @@ config SPI_S3C24XX
 	help
 	  SPI driver for Samsung S3C24XX series ARM SoCs
 
+source "drivers/spi/oled/Kconfig"
+
 config SPI_S3C24XX_FIQ
 	bool "S3C24XX driver with FIQ pseudo-DMA"
 	depends on SPI_S3C24XX

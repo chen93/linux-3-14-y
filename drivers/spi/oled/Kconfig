@@ -1,0 +1,5 @@
+config TQ2440_OLED
+	tristate "Support TQ2440 OLED (from 100ask.com)"
+	depends on ARCH_S3C24XX || SPI_GPIO
+	help
+	  TQ2440 oled(from 100ask.com) driver.
