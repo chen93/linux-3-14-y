@@ -309,7 +309,7 @@ struct platform_device s3c_device_gpio_i2c = {
 static struct spi_board_info tq2440_spi_board_info[] __initdata = {
 	{
 		.modalias	= "oled",
-		.max_speed_hz	= 100000,
+		.max_speed_hz	= 10000000,
 		.bus_num	= 0,
 		.mode		= SPI_MODE_0,
 		.chip_select	= S3C2410_GPG(1),
