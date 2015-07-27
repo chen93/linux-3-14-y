@@ -61,6 +61,9 @@
 #include <linux/spi/spi_gpio.h>
 #endif
 
+#include <linux/platform_data/leds-s3c24xx.h>
+#include <linux/leds.h>
+
 #include "common.h"
 #include "common-smdk.h"
 
@@ -337,6 +340,111 @@ static struct platform_device s3c_device_spi0_gpio = {
 };
 #endif
 
+/* LED devices */
+
+#define TQ2440_USE_GPIO_LEDS
+//#undef TQ2440_USE_GPIO_LEDS
+
+#ifdef TQ2440_USE_GPIO_LEDS
+static struct gpio_led tq2440_gpio_leds[] = {
+	{
+		.name = "LED1-nand-disk",
+		.gpio = S3C2410_GPB(5),
+		.active_low = 1,
+		.default_trigger = "nand-disk",
+	},{
+		.name = "LED2-heartbeat",
+		.gpio = S3C2410_GPB(6),
+		.active_low = 1,
+		.default_trigger = "heartbeat",
+	},{
+		.name = "LED3-timer",
+		.gpio = S3C2410_GPB(7),
+		.active_low = 1,
+		.default_trigger = "timer",
+	},{
+		.name = "LED4-cpu",
+		.gpio = S3C2410_GPB(8),
+		.active_low = 1,
+		.default_trigger = "cpu0",
+	},
+};
+
+static struct gpio_led_platform_data tq2440_gpio_led_info = {
+	.num_leds = ARRAY_SIZE(tq2440_gpio_leds),
+	.leds = tq2440_gpio_leds,
+};
+
+static struct platform_device tq2440_devices_gpio_leds = {
+	.name		= "leds-gpio",
+	.id		= 0,
+	.dev		= {
+		.platform_data		= (void *)&tq2440_gpio_led_info,
+	}
+};
+#else
+static struct s3c24xx_led_platdata tq2440_pdata_led1 = {
+	.gpio		= S3C2410_GPB(5),
+	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
+	.name		= "led1-nand-disk",
+	.def_trigger	= "nand-disk",
+};
+
+static struct s3c24xx_led_platdata tq2440_pdata_led2 = {
+	.gpio		= S3C2410_GPB(6),
+	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
+	.name		= "led2-heartbeat",
+	.def_trigger	= "heartbeat",
+};
+
+static struct s3c24xx_led_platdata tq2440_pdata_led3 = {
+	.gpio		= S3C2410_GPB(7),
+	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
+	.name		= "led3-timer",
+	.def_trigger	= "timer",
+};
+
+static struct s3c24xx_led_platdata tq2440_pdata_led4 = {
+	.gpio		= S3C2410_GPB(8),
+	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
+	.name		= "led4-cpu",
+	.def_trigger	= "cpu0",
+};
+
+static struct platform_device tq2440_led1 = {
+	.name		= "s3c24xx_led",
+	.id		= 0,
+	.dev		= {
+		.platform_data = &tq2440_pdata_led1,
+	},
+};
+
+static struct platform_device tq2440_led2 = {
+	.name		= "s3c24xx_led",
+	.id		= 1,
+	.dev		= {
+		.platform_data = &tq2440_pdata_led2,
+	},
+};
+
+static struct platform_device tq2440_led3 = {
+	.name		= "s3c24xx_led",
+	.id		= 2,
+	.dev		= {
+		.platform_data = &tq2440_pdata_led3,
+	},
+};
+
+static struct platform_device tq2440_led4 = {
+	.name		= "s3c24xx_led",
+	.id		= 3,
+	.dev		= {
+		.platform_data = &tq2440_pdata_led4,
+	},
+};
+
+#endif
+
 static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_ohci,
 	&s3c_device_lcd,
@@ -354,6 +462,15 @@ static struct platform_device *tq2440_devices[] __initdata = {
 	&s3c_device_spi0_gpio
 #else
 	&s3c_device_spi0,
+#endif
+
+#ifdef TQ2440_USE_GPIO_LEDS
+	&tq2440_devices_gpio_leds,
+#else
+	&tq2440_led1,
+	&tq2440_led2,
+	&tq2440_led3,
+	&tq2440_led4,
 #endif
 };
 
